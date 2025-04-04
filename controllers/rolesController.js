@@ -1,6 +1,6 @@
 const Rol = require('../models/rolesModel');
 
-exports.getAll = async (req, res) => {
+exports.getAllRoles = async (req, res) => {
     try {
         const roles = await Rol.getAll();
         res.json(roles);
@@ -9,7 +9,7 @@ exports.getAll = async (req, res) => {
     }
 };
 
-exports.getById = async (req, res) => {
+exports.getRolById = async (req, res) => {
     try {
         const rol = await Rol.getById(req.params.id);
         if (!rol) {
@@ -21,16 +21,16 @@ exports.getById = async (req, res) => {
     }
 };
 
-exports.create = async (req, res) => {
+exports.createRol = async (req, res) => {
     try {
-        const newId = await Rol.create(req.body);
-        res.status(201).json({ id: newId, ...req.body });
+        const newRolId = await Rol.create(req.body);
+        res.status(201).json({ id: newRolId, ...req.body });
     } catch (error) {
         res.status(400).json({ message: error.message });
     }
 };
 
-exports.update = async (req, res) => {
+exports.updateRol = async (req, res) => {
     try {
         const updated = await Rol.update(req.params.id, req.body);
         if (!updated) {
@@ -42,7 +42,7 @@ exports.update = async (req, res) => {
     }
 };
 
-exports.delete = async (req, res) => {
+exports.deleteRol = async (req, res) => {
     try {
         const deleted = await Rol.delete(req.params.id);
         if (!deleted) {

@@ -1,26 +1,42 @@
 const PermisoRol = require('../models/permisosRolesModel');
 
-exports.create = async (req, res) => {
+exports.getAllPermisosRoles = async (req, res) => {
     try {
-        const { permisoId, rolId } = req.body;
-        const created = await PermisoRol.create(permisoId, rolId);
-        if (!created) {
-            return res.status(400).json({ message: 'No se pudo crear la relación' });
-        }
-        res.status(201).json({ message: 'Relación creada correctamente' });
+        const permisosRoles = await PermisoRol.getAll();
+        res.json(permisosRoles);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 };
 
-exports.delete = async (req, res) => {
+exports.getPermisoRolById = async (req, res) => {
     try {
-        const { permisoId, rolId } = req.params;
-        const deleted = await PermisoRol.delete(permisoId, rolId);
-        if (!deleted) {
-            return res.status(404).json({ message: 'Relación no encontrada' });
+        const permisoRol = await PermisoRol.getById(req.params.id);
+        if (!permisoRol) {
+            return res.status(404).json({ message: 'Relación Permiso-Rol no encontrada' });
         }
-        res.json({ message: 'Relación eliminada correctamente' });
+        res.json(permisoRol);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+exports.createPermisoRol = async (req, res) => {
+    try {
+        const newPermisoRolId = await PermisoRol.create(req.body);
+        res.status(201).json({ id: newPermisoRolId, ...req.body });
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+};
+
+exports.deletePermisoRol = async (req, res) => {
+    try {
+        const deleted = await PermisoRol.delete(req.params.id);
+        if (!deleted) {
+            return res.status(404).json({ message: 'Relación Permiso-Rol no encontrada' });
+        }
+        res.json({ message: 'Relación Permiso-Rol eliminada correctamente' });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

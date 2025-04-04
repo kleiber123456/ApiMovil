@@ -1,6 +1,6 @@
 const Permiso = require('../models/permisosModel');
 
-exports.getAll = async (req, res) => {
+exports.getAllPermisos = async (req, res) => {
     try {
         const permisos = await Permiso.getAll();
         res.json(permisos);
@@ -9,7 +9,7 @@ exports.getAll = async (req, res) => {
     }
 };
 
-exports.getById = async (req, res) => {
+exports.getPermisoById = async (req, res) => {
     try {
         const permiso = await Permiso.getById(req.params.id);
         if (!permiso) {
@@ -21,16 +21,16 @@ exports.getById = async (req, res) => {
     }
 };
 
-exports.create = async (req, res) => {
+exports.createPermiso = async (req, res) => {
     try {
-        const newId = await Permiso.create(req.body);
-        res.status(201).json({ id: newId, ...req.body });
+        const newPermisoId = await Permiso.create(req.body);
+        res.status(201).json({ id: newPermisoId, ...req.body });
     } catch (error) {
         res.status(400).json({ message: error.message });
     }
 };
 
-exports.update = async (req, res) => {
+exports.updatePermiso = async (req, res) => {
     try {
         const updated = await Permiso.update(req.params.id, req.body);
         if (!updated) {
@@ -42,7 +42,7 @@ exports.update = async (req, res) => {
     }
 };
 
-exports.delete = async (req, res) => {
+exports.deletePermiso = async (req, res) => {
     try {
         const deleted = await Permiso.delete(req.params.id);
         if (!deleted) {

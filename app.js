@@ -30,11 +30,12 @@ const comprasPorRepuestoRoutes = require('./routes/comprasPorRepuestoRoutes');
 const ventaPorRepuestoRoutes = require('./routes/ventaPorRepuestoRoutes');
 const ventaPorServicioRoutes = require('./routes/ventaPorServicioRoutes');
 
-// Nuevas rutas para las 4 tablas
 const rolesRoutes = require('./routes/rolesRoutes');
+const usuariosRoutes = require('./routes/usuariosRoutes');
 const permisosRoutes = require('./routes/permisosRoutes');
 const permisosRolesRoutes = require('./routes/permisosRolesRoutes');
-const usuariosRoutes = require('./routes/usuariosRoutes');
+
+
 
 // Configuración de rutas existentes
 app.use('/api/clientes', clientesRoutes);
@@ -56,11 +57,12 @@ app.use('/api/compras-repuestos', comprasPorRepuestoRoutes);
 app.use('/api/ventas-repuestos', ventaPorRepuestoRoutes);
 app.use('/api/ventas-servicios', ventaPorServicioRoutes);
 
-// Configuración de las nuevas rutas
 app.use('/api/roles', rolesRoutes);
+app.use('/api/usuarios', usuariosRoutes);
 app.use('/api/permisos', permisosRoutes);
 app.use('/api/permisos-roles', permisosRolesRoutes);
-app.use('/api/usuarios', usuariosRoutes);
+
+
 
 // Ruta de prueba actualizada
 app.get('/', (req, res) => {
@@ -85,11 +87,15 @@ app.get('/', (req, res) => {
             comprasRepuestos: '/api/compras-repuestos',
             ventasRepuestos: '/api/ventas-repuestos',
             ventasServicios: '/api/ventas-servicios',
-            // Nuevos endpoints
+
             roles: '/api/roles',
+            usuarios: '/api/usuarios',
             permisos: '/api/permisos',
             permisosRoles: '/api/permisos-roles',
-            usuarios: '/api/usuarios'
+            login: '/api/usuarios/login (POST)'
+            
+
+
         }
     });
 });

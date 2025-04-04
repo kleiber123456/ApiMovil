@@ -1,8 +1,10 @@
 const express = require('express');
 const router = express.Router();
-const controller = require('../controllers/permisosRolesController');
+const permisosRolesController = require('../controllers/permisosRolesController');
 
-router.post('/', controller.create);
-router.delete('/:permisoId/:rolId', controller.delete);
+router.get('/', permisosRolesController.getAllPermisosRoles);
+router.get('/:id', permisosRolesController.getPermisoRolById);
+router.post('/', permisosRolesController.createPermisoRol);
+router.delete('/:id', permisosRolesController.deletePermisoRol);
 
 module.exports = router;

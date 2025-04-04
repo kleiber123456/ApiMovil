@@ -1,130 +1,97 @@
 const Usuario = require('../models/usuariosModel');
+const bcrypt = require('bcrypt');
+const saltRounds = 10;
 
-exports.getAll = async (req, res) => {
+exports.getAllUsuarios = async (req, res) => {
     try {
         const usuarios = await Usuario.getAll();
         res.json(usuarios);
     } catch (error) {
-        res.status(500).json({ 
-            success: false,
-            message: 'Error al obtener los usuarios',
-            error: error.message 
-        });
+        res.status(500).json({ message: error.message });
     }
 };
 
-exports.getById = async (req, res) => {
+exports.getUsuarioById = async (req, res) => {
     try {
         const usuario = await Usuario.getById(req.params.id);
         if (!usuario) {
-            return res.status(404).json({ 
-                success: false,
-                message: 'Usuario no encontrado' 
-            });
+            return res.status(404).json({ message: 'Usuario no encontrado' });
         }
-        res.json({
-            success: true,
-            data: usuario
-        });
+        // No devolver la contraseña
+        const { password, ...usuarioSinPassword } = usuario;
+        res.json(usuarioSinPassword);
     } catch (error) {
-        res.status(500).json({ 
-            success: false,
-            message: 'Error al obtener el usuario',
-            error: error.message 
-        });
+        res.status(500).json({ message: error.message });
     }
 };
 
-exports.create = async (req, res) => {
+exports.createUsuario = async (req, res) => {
     try {
-        // Validación básica de campos requeridos
-        if (!req.body.Celular || !req.body.Correo || !req.body.Contraseña || !req.body.Roles_idRoles) {
-            return res.status(400).json({ 
-                success: false,
-                message: 'Faltan campos requeridos: Celular, Correo, Contraseña o Roles_idRoles' 
-            });
-        }
+        // Encriptar la contraseña antes de guardarla
+        const hashedPassword = await bcrypt.hash(req.body.password, saltRounds);
+        const newUsuarioId = await Usuario.create({
+            ...req.body,
+            password: hashedPassword
+        });
+        res.status(201).json({ id: newUsuarioId, ...req.body, password: '*****' });
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+};
 
-        const newUserId = await Usuario.create(req.body);
+exports.updateUsuario = async (req, res) => {
+    try {
+        // Si se está actualizando la contraseña, encriptarla
+        if (req.body.password) {
+            req.body.password = await bcrypt.hash(req.body.password, saltRounds);
+        }
         
-        res.status(201).json({ 
-            success: true,
-            message: 'Usuario creado correctamente',
-            id: newUserId,
-            data: req.body
-        });
-    } catch (error) {
-        res.status(500).json({ 
-            success: false,
-            message: 'Error al crear el usuario',
-            error: error.message 
-        });
-    }
-};
-
-exports.update = async (req, res) => {
-    try {
         const updated = await Usuario.update(req.params.id, req.body);
         if (!updated) {
-            return res.status(404).json({ 
-                success: false,
-                message: 'Usuario no encontrado' 
-            });
+            return res.status(404).json({ message: 'Usuario no encontrado' });
         }
-        
-        res.json({ 
-            success: true,
-            message: 'Usuario actualizado correctamente',
-            id: req.params.id
-        });
+        res.json({ message: 'Usuario actualizado correctamente' });
     } catch (error) {
-        res.status(500).json({ 
-            success: false,
-            message: 'Error al actualizar el usuario',
-            error: error.message 
-        });
+        res.status(400).json({ message: error.message });
     }
 };
 
-exports.delete = async (req, res) => {
+exports.deleteUsuario = async (req, res) => {
     try {
         const deleted = await Usuario.delete(req.params.id);
         if (!deleted) {
-            return res.status(404).json({ 
-                success: false,
-                message: 'Usuario no encontrado' 
-            });
+            return res.status(404).json({ message: 'Usuario no encontrado' });
+        }
+        res.json({ message: 'Usuario eliminado correctamente' });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+exports.login = async (req, res) => {
+    try {
+        const { Correo, password } = req.body;
+        
+        // Buscar usuario por correo
+        const usuario = await Usuario.getByEmail(Correo);
+        if (!usuario) {
+            return res.status(401).json({ message: 'Credenciales incorrectas' });
         }
         
-        res.json({ 
-            success: true,
-            message: 'Usuario eliminado correctamente',
-            id: req.params.id
+        // Comparar contraseñas
+        const match = await bcrypt.compare(password, usuario.password);
+        if (!match) {
+            return res.status(401).json({ message: 'Credenciales incorrectas' });
+        }
+        
+        // No devolver la contraseña en la respuesta
+        const { password: _, ...usuarioSinPassword } = usuario;
+        
+        res.json({
+            message: 'Inicio de sesión exitoso',
+            usuario: usuarioSinPassword
         });
     } catch (error) {
-        res.status(500).json({ 
-            success: false,
-            message: 'Error al eliminar el usuario',
-            error: error.message 
-        });
+        res.status(500).json({ message: error.message });
     }
 };
-
-// Opcional: Endpoint adicional para buscar usuarios por rol
-exports.getByRol = async (req, res) => {
-    try {
-        const usuarios = await Usuario.getByRol(req.params.rolId);
-        res.json({ 
-            success: true,
-            count: usuarios.length,
-            data: usuarios
-        });
-    } catch (error) {
-        res.status(500).json({ 
-            success: false,
-            message: 'Error al obtener usuarios por rol',
-            error: error.message 
-        });
-    }
-};
-
