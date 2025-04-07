@@ -1,6 +1,6 @@
 // middleware/authMiddleware.js
 const Usuario = require('../models/usuariosModel');
-const bcrypt = require('bcrypt');
+// const bcrypt = require('bcrypt');
 
 exports.authenticate = async (req, res, next) => {
     try {

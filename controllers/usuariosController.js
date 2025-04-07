@@ -1,5 +1,5 @@
 const Usuario = require('../models/usuariosModel');
-const bcrypt = require('bcrypt');
+// const bcrypt = require('bcrypt');
 const saltRounds = 10;
 
 exports.getAllUsuarios = async (req, res) => {
@@ -27,25 +27,20 @@ exports.getUsuarioById = async (req, res) => {
 
 exports.createUsuario = async (req, res) => {
     try {
-        // Encriptar la contraseña antes de guardarla
-        const hashedPassword = await bcrypt.hash(req.body.password, saltRounds);
         const newUsuarioId = await Usuario.create({
             ...req.body,
-            password: hashedPassword
+            password: req.body.password  
         });
-        res.status(201).json({ id: newUsuarioId, ...req.body, password: '*****' });
+        const { password, ...resto } = req.body;
+        res.status(201).json({ id: newUsuarioId, ...resto });
     } catch (error) {
         res.status(400).json({ message: error.message });
     }
 };
 
+
 exports.updateUsuario = async (req, res) => {
     try {
-        // Si se está actualizando la contraseña, encriptarla
-        if (req.body.password) {
-            req.body.password = await bcrypt.hash(req.body.password, saltRounds);
-        }
-        
         const updated = await Usuario.update(req.params.id, req.body);
         if (!updated) {
             return res.status(404).json({ message: 'Usuario no encontrado' });
@@ -55,6 +50,7 @@ exports.updateUsuario = async (req, res) => {
         res.status(400).json({ message: error.message });
     }
 };
+
 
 exports.deleteUsuario = async (req, res) => {
     try {
@@ -71,22 +67,17 @@ exports.deleteUsuario = async (req, res) => {
 exports.login = async (req, res) => {
     try {
         const { Correo, password } = req.body;
-        
-        // Buscar usuario por correo
         const usuario = await Usuario.getByEmail(Correo);
         if (!usuario) {
             return res.status(401).json({ message: 'Credenciales incorrectas' });
         }
-        
-        // Comparar contraseñas
-        const match = await bcrypt.compare(password, usuario.password);
-        if (!match) {
+
+        if (password !== usuario.password) {
             return res.status(401).json({ message: 'Credenciales incorrectas' });
         }
-        
-        // No devolver la contraseña en la respuesta
+
         const { password: _, ...usuarioSinPassword } = usuario;
-        
+
         res.json({
             message: 'Inicio de sesión exitoso',
             usuario: usuarioSinPassword
