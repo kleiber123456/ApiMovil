@@ -92,7 +92,8 @@ app.get('/', (req, res) => {
             usuarios: '/api/usuarios',
             permisos: '/api/permisos',
             permisosRoles: '/api/permisos-roles',
-            login: '/api/usuarios/login (POST)'
+            login: '/api/usuarios/login (POST)',
+            recuperarpasword: '/api/usuarios/recuperar-password (POST)'
             
 
 

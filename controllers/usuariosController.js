@@ -1,5 +1,4 @@
 const Usuario = require('../models/usuariosModel');
-// const bcrypt = require('bcrypt');
 const saltRounds = 10;
 
 exports.getAllUsuarios = async (req, res) => {
@@ -86,3 +85,26 @@ exports.login = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+
+// 🔧 Mueve aquí la función verificarCorreo
+exports.verificarCorreo = async (req, res) => {
+    try {
+        const { Correo } = req.body;
+        const usuario = await Usuario.getByEmail(Correo);
+
+        if (!usuario) {
+            return res.status(404).json({ message: 'El correo no está registrado' });
+        }
+
+        res.status(200).json({
+            message: 'Correo válido',
+            usuario: { id: usuario.id, Correo: usuario.Correo }
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error del servidor' });
+    }
+};
+
+
+
