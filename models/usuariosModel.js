@@ -17,28 +17,51 @@ class Usuario {
     }
 
     static async create(usuario) {
-        const { Nombre, Apellido, Correo, Estado, Rol_id, password } = usuario;
+        const {
+            Nombre, Apellido, Direccion, Correo,
+            Documento, Telefono, Usuario: nombreUsuario,
+            Estado, Rol_id, password
+        } = usuario;
+
         const [result] = await pool.query(
-            'INSERT INTO usuario (Nombre, Apellido, Correo, Estado, Rol_id, password) VALUES (?, ?, ?, ?, ?, ?)',
-            [Nombre, Apellido, Correo, Estado, Rol_id, password]
+            `INSERT INTO usuario 
+            (Nombre, Apellido, Direccion, Correo, Documento, Telefono, Usuario, Estado, Rol_id, password) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [Nombre, Apellido, Direccion, Correo, Documento, Telefono, nombreUsuario, Estado, Rol_id, password]
         );
         return result.insertId;
     }
 
     static async update(id, usuario) {
-        const { Nombre, Apellido, Correo, Estado, Rol_id, password } = usuario;
-        
+        const {
+            Nombre, Apellido, Direccion, Correo,
+            Documento, Telefono, Usuario: nombreUsuario,
+            Estado, Rol_id, password
+        } = usuario;
+
         let query;
         let params;
-        
+
         if (password) {
-            query = 'UPDATE usuario SET Nombre = ?, Apellido = ?, Correo = ?, Estado = ?, Rol_id = ?, password = ? WHERE id = ?';
-            params = [Nombre, Apellido, Correo, Estado, Rol_id, password, id];
+            query = `UPDATE usuario 
+                     SET Nombre = ?, Apellido = ?, Direccion = ?, Correo = ?, Documento = ?, 
+                         Telefono = ?, Usuario = ?, Estado = ?, Rol_id = ?, password = ?
+                     WHERE id = ?`;
+            params = [
+                Nombre, Apellido, Direccion, Correo, Documento,
+                Telefono, nombreUsuario, Estado, Rol_id, password, id
+            ];
         } else {
-            query = 'UPDATE usuario SET Nombre = ?, Apellido = ?, Correo = ?, Estado = ?, Rol_id = ? WHERE id = ?';
-            params = [Nombre, Apellido, Correo, Estado, Rol_id, id];
+            query = `UPDATE usuario 
+                     SET Nombre = ?, Apellido = ?, Direccion = ?, Correo = ?, Documento = ?, 
+                         Telefono = ?, Usuario = ?, Estado = ?, Rol_id = ?
+                     WHERE id = ?`;
+            params = [
+                Nombre, Apellido, Direccion, Correo, Documento,
+                Telefono, nombreUsuario, Estado, Rol_id, id
+            ];
         }
-        
+
         const [result] = await pool.query(query, params);
         return result.affectedRows > 0;
     }

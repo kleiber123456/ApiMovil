@@ -3,9 +3,11 @@ const { pool } = require('../config/db');
 class Venta {
     static async getAll() {
         const [rows] = await pool.query(`
-            SELECT v.*, c.Nombre as ClienteNombre, c.Apellido as ClienteApellido, e.Nombre as EstadoNombre 
+            SELECT v.*, 
+                   ve.Placa as VehiculoPlaca, 
+                   e.Nombre as EstadoNombre 
             FROM Ventas v
-            JOIN Clientes c ON v.Clientes_idClientes = c.idClientes
+            JOIN Vehiculos ve ON v.Vehiculos_idVehiculos = ve.idVehiculos
             JOIN Estados e ON v.Estados_idEstados = e.idEstados
         `);
         return rows;
@@ -13,9 +15,11 @@ class Venta {
 
     static async getById(id) {
         const [rows] = await pool.query(`
-            SELECT v.*, c.Nombre as ClienteNombre, c.Apellido as ClienteApellido, e.Nombre as EstadoNombre 
+            SELECT v.*, 
+                   ve.Placa as VehiculoPlaca, 
+                   e.Nombre as EstadoNombre 
             FROM Ventas v
-            JOIN Clientes c ON v.Clientes_idClientes = c.idClientes
+            JOIN Vehiculos ve ON v.Vehiculos_idVehiculos = ve.idVehiculos
             JOIN Estados e ON v.Estados_idEstados = e.idEstados
             WHERE v.idVentas = ?
         `, [id]);
@@ -23,19 +27,19 @@ class Venta {
     }
 
     static async create(venta) {
-        const { Fecha, Clientes_idClientes, Estados_idEstados, Total } = venta;
+        const { Fecha, Vehiculos_idVehiculos, Estados_idEstados, Total } = venta;
         const [result] = await pool.query(
-            'INSERT INTO Ventas (Fecha, Clientes_idClientes, Estados_idEstados, Total) VALUES (?, ?, ?, ?)',
-            [Fecha, Clientes_idClientes, Estados_idEstados, Total]
+            'INSERT INTO Ventas (Fecha, Vehiculos_idVehiculos, Estados_idEstados, Total) VALUES (?, ?, ?, ?)',
+            [Fecha, Vehiculos_idVehiculos, Estados_idEstados, Total]
         );
         return result.insertId;
     }
 
     static async update(id, venta) {
-        const { Fecha, Clientes_idClientes, Estados_idEstados, Total } = venta;
+        const { Fecha, Vehiculos_idVehiculos, Estados_idEstados, Total } = venta;
         const [result] = await pool.query(
-            'UPDATE Ventas SET Fecha = ?, Clientes_idClientes = ?, Estados_idEstados = ?, Total = ? WHERE idVentas = ?',
-            [Fecha, Clientes_idClientes, Estados_idEstados, Total, id]
+            'UPDATE Ventas SET Fecha = ?, Vehiculos_idVehiculos = ?, Estados_idEstados = ?, Total = ? WHERE idVentas = ?',
+            [Fecha, Vehiculos_idVehiculos, Estados_idEstados, Total, id]
         );
         return result.affectedRows > 0;
     }

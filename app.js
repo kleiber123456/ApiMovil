@@ -11,7 +11,6 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 // Rutas existentes
-const clientesRoutes = require('./routes/clientesRoutes');
 const comprasRoutes = require('./routes/comprasRoutes');
 const repuestosRoutes = require('./routes/repuestosRoutes');
 const ventasRoutes = require('./routes/ventasRoutes');
@@ -38,7 +37,6 @@ const permisosRolesRoutes = require('./routes/permisosRolesRoutes');
 
 
 // Configuración de rutas existentes
-app.use('/api/clientes', clientesRoutes);
 app.use('/api/compras', comprasRoutes);
 app.use('/api/repuestos', repuestosRoutes);
 app.use('/api/ventas', ventasRoutes);
@@ -69,7 +67,6 @@ app.get('/', (req, res) => {
     res.json({
         message: 'Bienvenido a la API del Taller MotOrtega',
         endpoints: {
-            clientes: '/api/clientes',
             compras: '/api/compras',
             repuestos: '/api/repuestos',
             ventas: '/api/ventas',
@@ -93,7 +90,9 @@ app.get('/', (req, res) => {
             permisos: '/api/permisos',
             permisosRoles: '/api/permisos-roles',
             login: '/api/usuarios/login (POST)',
-            recuperarpasword: '/api/usuarios/recuperar-password (POST)'
+            Enviarcodigo: '/api/usuarios/enviar-codigo (POST)',
+            verificarcodigo: '/api/usuarios/verificar-codigo (POST)',
+            Actulizarpasword: '/api/usuarios/actualizar-password (POST)',
             
 
 
