@@ -1,4 +1,4 @@
-const { enviarCodigoPorCorreo } = require('../utils/emailSender');
+const { enviarCodigoPorCorreo, enviarCorreoRegistroExitoso, enviarCorreoCambioPassword } = require('../utils/emailSender');
 const Usuario = require('../models/usuariosModel');
 const Codigo = require('../models/codigoModel');
 const saltRounds = 10;
@@ -30,15 +30,20 @@ exports.createUsuario = async (req, res) => {
     try {
         const newUsuarioId = await Usuario.create({
             ...req.body,
-            password: req.body.password  
+            password: req.body.password
         });
-        const { password, ...resto } = req.body;
+
+        const { password, Nombre, Correo, ...resto } = req.body;
+
+        // 📨 Enviar correo de confirmación de registro
+        await enviarCorreoRegistroExitoso(Correo, Nombre);
+
         res.status(201).json({ id: newUsuarioId, ...resto });
     } catch (error) {
+        console.error('Error al registrar usuario:', error);
         res.status(400).json({ message: error.message });
     }
 };
-
 
 exports.updateUsuario = async (req, res) => {
     try {
@@ -138,11 +143,17 @@ exports.actualizarPassword = async (req, res) => {
             return res.status(404).json({ message: 'Usuario no encontrado' });
         }
 
-        const actualizado = await Usuario.update(usuario.id, { ...usuario, password: nuevaPassword });
+        const actualizado = await Usuario.update(usuario.id, {
+            ...usuario,
+            password: nuevaPassword
+        });
 
         if (!actualizado) {
             return res.status(400).json({ message: 'No se pudo actualizar la contraseña' });
         }
+
+        // 📨 Enviar notificación de cambio de contraseña
+        await enviarCorreoCambioPassword(Correo, usuario.Nombre);
 
         res.status(200).json({ message: 'Contraseña actualizada correctamente' });
     } catch (error) {
