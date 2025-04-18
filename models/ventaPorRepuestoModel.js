@@ -1,119 +1,122 @@
 const { pool } = require('../config/db');
 
-class VentaPorRepuesto {
+class Venta {
     static async getAll() {
         const [rows] = await pool.query(`
-            SELECT vpr.*, r.Nombre as repuesto_nombre, c.Nombre as cliente_nombre, 
-                   c.Apellido as cliente_apellido, v.Fecha as fecha_venta
-            FROM Venta_Por_Repuesto vpr
-            JOIN Repuestos r ON vpr.idRepuestos = r.idRepuestos
-            JOIN Ventas v ON vpr.idVentas = v.idVentas
-            JOIN Clientes c ON v.Clientes_idClientes = c.idClientes
+            SELECT v.*, 
+                   ve.Placa as VehiculoPlaca,
+                   ve.Color as VehiculoColor,
+                   ref.Nombre as ReferenciaNombre,
+                   m.Nombre as MarcaNombre,
+                   e.Nombre as EstadoNombre
+            FROM Ventas v
+            JOIN Vehiculos ve ON v.Vehiculos_idVehiculos = ve.idVehiculos
+            JOIN Referencia ref ON ve.Referencia_idReferencia = ref.idReferencia
+            JOIN Marcas m ON ref.idMarcas = m.idMarcas
+            JOIN Estados e ON v.Estados_idEstados = e.idEstados
         `);
         return rows;
     }
 
     static async getById(id) {
-        const [rows] = await pool.query('SELECT * FROM Venta_Por_Repuesto WHERE idVenta_Por_Repuesto = ?', [id]);
+        const [rows] = await pool.query(`
+            SELECT v.*, 
+                   ve.Placa as VehiculoPlaca,
+                   ve.Color as VehiculoColor,
+                   ref.Nombre as ReferenciaNombre,
+                   m.Nombre as MarcaNombre,
+                   e.Nombre as EstadoNombre
+            FROM Ventas v
+            JOIN Vehiculos ve ON v.Vehiculos_idVehiculos = ve.idVehiculos
+            JOIN Referencia ref ON ve.Referencia_idReferencia = ref.idReferencia
+            JOIN Marcas m ON ref.idMarcas = m.idMarcas
+            JOIN Estados e ON v.Estados_idEstados = e.idEstados
+            WHERE v.idVentas = ?
+        `, [id]);
         return rows[0];
     }
 
-    static async getByVentaId(ventaId) {
-        const [rows] = await pool.query(`
-            SELECT vpr.*, r.Nombre as repuesto_nombre, r.Cantidad as stock_actual
-            FROM Venta_Por_Repuesto vpr
-            JOIN Repuestos r ON vpr.idRepuestos = r.idRepuestos
-            WHERE vpr.idVentas = ?
-        `, [ventaId]);
-        return rows;
-    }
-
-    static async getByRepuestoId(repuestoId) {
-        const [rows] = await pool.query(`
-            SELECT vpr.*, v.Fecha as fecha_venta, c.Nombre as cliente_nombre, c.Apellido as cliente_apellido
-            FROM Venta_Por_Repuesto vpr
-            JOIN Ventas v ON vpr.idVentas = v.idVentas
-            JOIN Clientes c ON v.Clientes_idClientes = c.idClientes
-            WHERE vpr.idRepuestos = ?
-        `, [repuestoId]);
-        return rows;
-    }
-
-    static async create(ventaRepuesto) {
-        const { idRepuestos, idVentas, Cantidad, Subtotal } = ventaRepuesto;
-        
-        // Verificar stock disponible
-        const [repuesto] = await pool.query(
-            'SELECT Cantidad FROM Repuestos WHERE idRepuestos = ?',
-            [idRepuestos]
-        );
-        
-        if (repuesto[0].Cantidad < Cantidad) {
-            throw new Error('Stock insuficiente para este repuesto');
-        }
-        
+    static async create(venta) {
+        const { Fecha, Vehiculos_idVehiculos, Estados_idEstados, Total } = venta;
         const [result] = await pool.query(
-            'INSERT INTO Venta_Por_Repuesto (idRepuestos, idVentas, Cantidad, Subtotal) VALUES (?, ?, ?, ?)',
-            [idRepuestos, idVentas, Cantidad, Subtotal]
+            'INSERT INTO Ventas (Fecha, Vehiculos_idVehiculos, Estados_idEstados, Total) VALUES (?, ?, ?, ?)',
+            [Fecha || new Date(), Vehiculos_idVehiculos, Estados_idEstados, Total || 0]
         );
-        
-        // Actualizar el stock del repuesto
-        await pool.query(
-            'UPDATE Repuestos SET Cantidad = Cantidad - ? WHERE idRepuestos = ?',
-            [Cantidad, idRepuestos]
-        );
-        
         return result.insertId;
     }
 
-    static async update(id, ventaRepuesto) {
-        const { idRepuestos, idVentas, Cantidad, Subtotal } = ventaRepuesto;
-        
-        // Obtener la cantidad anterior para ajustar el stock
-        const [oldData] = await pool.query(
-            'SELECT Cantidad, idRepuestos FROM Venta_Por_Repuesto WHERE idVenta_Por_Repuesto = ?',
-            [id]
-        );
-        
+    static async update(id, venta) {
+        const { Fecha, Vehiculos_idVehiculos, Estados_idEstados, Total } = venta;
         const [result] = await pool.query(
-            'UPDATE Venta_Por_Repuesto SET idRepuestos = ?, idVentas = ?, Cantidad = ?, Subtotal = ? WHERE idVenta_Por_Repuesto = ?',
-            [idRepuestos, idVentas, Cantidad, Subtotal, id]
+            'UPDATE Ventas SET Fecha = ?, Vehiculos_idVehiculos = ?, Estados_idEstados = ?, Total = ? WHERE idVentas = ?',
+            [Fecha, Vehiculos_idVehiculos, Estados_idEstados, Total, id]
         );
-        
-        // Ajustar el stock del repuesto
-        if (oldData[0]) {
-            const diff = Cantidad - oldData[0].Cantidad;
-            await pool.query(
-                'UPDATE Repuestos SET Cantidad = Cantidad - ? WHERE idRepuestos = ?',
-                [diff, oldData[0].idRepuestos]
-            );
-        }
-        
         return result.affectedRows > 0;
     }
 
     static async delete(id) {
-        // Obtener datos antes de borrar para ajustar el stock
-        const [oldData] = await pool.query(
-            'SELECT Cantidad, idRepuestos FROM Venta_Por_Repuesto WHERE idVenta_Por_Repuesto = ?',
-            [id]
-        );
-        
-        const [result] = await pool.query(
-            'DELETE FROM Venta_Por_Repuesto WHERE idVenta_Por_Repuesto = ?', 
-            [id]
-        );
-        
-        // Ajustar el stock del repuesto
-        if (oldData[0] && result.affectedRows > 0) {
-            await pool.query(
-                'UPDATE Repuestos SET Cantidad = Cantidad + ? WHERE idRepuestos = ?',
-                [oldData[0].Cantidad, oldData[0].idRepuestos]
-            );
-        }
-        
+        await pool.query('DELETE FROM Venta_Por_Repuesto WHERE idVentas = ?', [id]);
+        await pool.query('DELETE FROM Venta_Por_Servicio WHERE Ventas_idVentas = ?', [id]);
+        const [result] = await pool.query('DELETE FROM Ventas WHERE idVentas = ?', [id]);
         return result.affectedRows > 0;
+    }
+
+    static async getRepuestosByVenta(idVenta) {
+        const [rows] = await pool.query(`
+            SELECT vpr.*, 
+                   r.Nombre as RepuestoNombre,
+                   r.Precio_Venta as PrecioUnitario
+            FROM Venta_Por_Repuesto vpr
+            JOIN Repuestos r ON vpr.idRepuestos = r.idRepuestos
+            WHERE vpr.idVentas = ?
+        `, [idVenta]);
+        return rows;
+    }
+
+    static async getServiciosByVenta(idVenta) {
+        const [rows] = await pool.query(`
+            SELECT vps.*, 
+                   s.Nombre as ServicioNombre,
+                   s.Precio as PrecioUnitario
+            FROM Venta_Por_Servicio vps
+            JOIN Servicios s ON vps.Servicios_idServicios = s.idServicios
+            WHERE vps.Ventas_idVentas = ?
+        `, [idVenta]);
+        return rows;
+    }
+
+    static async addRepuestoToVenta(idVenta, idRepuesto, cantidad, precioUnitario) {
+        const subtotal = cantidad * precioUnitario;
+        const [result] = await pool.query(
+            'INSERT INTO Venta_Por_Repuesto (idRepuestos, idVentas, Cantidad, Precio_Unitario, SubTotal) VALUES (?, ?, ?, ?, ?)',
+            [idRepuesto, idVenta, cantidad, precioUnitario, subtotal]
+        );
+        
+        // Actualizar total de la venta
+        await this.updateVentaTotal(idVenta);
+        return result.insertId;
+    }
+
+    static async addServicioToVenta(idVenta, idServicio, precioUnitario) {
+        const [result] = await pool.query(
+            'INSERT INTO Venta_Por_Servicio (Ventas_idVentas, Servicios_idServicios, Subtotal) VALUES (?, ?, ?)',
+            [idVenta, idServicio, precioUnitario]
+        );
+        
+        // Actualizar total de la venta
+        await this.updateVentaTotal(idVenta);
+        return result.insertId;
+    }
+
+    static async updateVentaTotal(idVenta) {
+        const [repuestos] = await pool.query('SELECT SUM(SubTotal) as totalRepuestos FROM Venta_Por_Repuesto WHERE idVentas = ?', [idVenta]);
+        const [servicios] = await pool.query('SELECT SUM(Subtotal) as totalServicios FROM Venta_Por_Servicio WHERE Ventas_idVentas = ?', [idVenta]);
+        
+        const total = (repuestos[0].totalRepuestos || 0) + (servicios[0].totalServicios || 0);
+        
+        await pool.query('UPDATE Ventas SET Total = ? WHERE idVentas = ?', [total, idVenta]);
+        return total;
     }
 }
 
-module.exports = VentaPorRepuesto;
+module.exports = Venta;

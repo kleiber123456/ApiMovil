@@ -7,6 +7,6 @@ router.get('/:id', vehiculosController.getVehiculoById);
 router.post('/', vehiculosController.createVehiculo);
 router.put('/:id', vehiculosController.updateVehiculo);
 router.delete('/:id', vehiculosController.deleteVehiculo);
-router.get('/cliente/:clienteId', vehiculosController.getVehiculosByCliente);
+router.get('/usuario/:usuarioId', vehiculosController.getVehiculosByUsuarioId);
 
 module.exports = router;

@@ -54,9 +54,9 @@ exports.deleteVehiculo = async (req, res) => {
     }
 };
 
-exports.getVehiculosByCliente = async (req, res) => {
+exports.getVehiculosByUsuarioId = async (req, res) => {
     try {
-        const vehiculos = await Vehiculo.getByClienteId(req.params.clienteId);
+        const vehiculos = await Vehiculo.getByUsuarioId(req.params.usuarioId);
         res.json(vehiculos);
     } catch (error) {
         res.status(500).json({ message: error.message });
