@@ -7,7 +7,46 @@ const app = express();
 
 // Middleware
 app.use(cors());
-app.use(bodyParser.json());
+app.use(bodyParser.json({
+    strict: false, // Permite JSON no estricto
+    limit: '10mb', // Tamaño máximo del payload
+    verify: (req, res, buf) => {
+      // Solo verificar JSON si hay contenido
+      if (buf.length > 0) {
+        try {
+          JSON.parse(buf.toString());
+        } catch (e) {
+          console.error('Error parsing JSON:', e.message);
+          throw new Error('Invalid JSON');
+        }
+      }
+    }
+  }));
+
+  app.use((req, res, next) => {
+    // Para rutas GET con query parameters, ignoramos body
+    if (req.method === 'GET' && Object.keys(req.query).length > 0) {
+      req._body = false; // Force body-parser to skip
+      return next();
+    }
+    next();
+  });
+  
+  // Manejo de errores mejorado
+  app.use((err, req, res, next) => {
+    if (err instanceof SyntaxError || err.message === 'Invalid JSON') {
+      return res.status(400).json({
+        success: false,
+        message: 'Error en el formato de los datos',
+        details: process.env.NODE_ENV === 'development' ? {
+          error: err.message,
+          received: req.body,
+          expected: 'JSON válido o parámetros en URL para GET'
+        } : undefined
+      });
+    }
+    next(err);
+  });
 app.use(bodyParser.urlencoded({ extended: true }));
 
 // Rutas existentes

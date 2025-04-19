@@ -162,4 +162,45 @@ exports.actualizarPassword = async (req, res) => {
     }
 };
 
+// Nuevo método para buscar usuario por correo
+exports.buscarUsuarioPorCorreo = async (req, res) => {
+    try {
+        const correo = req.query.correo?.trim().toLowerCase();
 
+        console.log("Correo recibido en query:", req.query.correo);
+        console.log("Correo después de limpiar:", correo);
+
+        if (!correo) {
+            return res.status(400).json({
+                success: false,
+                message: 'Debe proporcionar un correo como parámetro en la URL (?correo=valor)'
+            });
+        }
+
+        const usuario = await Usuario.getByEmail(correo);
+
+        console.log("Resultado de getByEmail:", usuario);
+
+        if (!usuario) {
+            return res.status(404).json({
+                success: false,
+                message: 'Usuario no encontrado'
+            });
+        }
+
+        const { password, ...usuarioSinPassword } = usuario;
+
+        res.status(200).json({
+            success: true,
+            data: usuarioSinPassword
+        });
+
+    } catch (error) {
+        console.error('Error en buscarUsuarioPorCorreo:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error interno del servidor',
+            error: error.message
+        });
+    }
+};

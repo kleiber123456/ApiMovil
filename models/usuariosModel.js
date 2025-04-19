@@ -12,7 +12,10 @@ class Usuario {
     }
 
     static async getByEmail(Correo) {
-        const [rows] = await pool.query('SELECT * FROM usuario WHERE Correo = ?', [Correo]);
+        const [rows] = await pool.query(
+            'SELECT * FROM usuario WHERE LOWER(TRIM(Correo)) = LOWER(TRIM(?))',
+            [Correo]
+        );
         return rows[0];
     }
 
