@@ -1,4 +1,5 @@
 const VentaPorRepuesto = require('../models/ventaPorRepuestoModel');
+const { pool } = require('../config/db');
 
 exports.getAll = async (req, res) => {
     try {
