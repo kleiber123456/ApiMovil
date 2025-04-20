@@ -62,3 +62,16 @@ exports.getVehiculosByUsuarioId = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+
+exports.getAll = async (req, res) => {
+    try {
+      const [rows] = await pool.query(`
+        SELECT v.idVehiculos, v.Placa, u.Nombre AS UsuarioNombre
+        FROM Vehiculos v
+        JOIN Usuarios u ON v.usuario_idUsuario = u.idUsuario
+      `);
+      res.json(rows);
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  };

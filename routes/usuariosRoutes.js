@@ -13,6 +13,7 @@ router.get('/buscar-por-correo', (req, res, next) => {
     }
     next();
   }, usuariosController.buscarUsuarioPorCorreo);
+router.get('/con-vehiculos', usuariosController.getUsuariosConVehiculos);
 router.get('/:id', usuariosController.getUsuarioById);
 router.post('/', usuariosController.createUsuario);
 router.post('/login', usuariosController.login);

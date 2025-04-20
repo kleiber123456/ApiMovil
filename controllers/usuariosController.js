@@ -204,3 +204,16 @@ exports.buscarUsuarioPorCorreo = async (req, res) => {
         });
     }
 };
+
+exports.getUsuariosConVehiculos = async (req, res) => {
+    try {
+      const [rows] = await pool.query(`
+        SELECT DISTINCT u.idUsuario, u.Nombre, u.Correo
+        FROM Usuarios u
+        JOIN Vehiculos v ON u.idUsuario = v.usuario_idUsuario
+      `);
+      res.json(rows);
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  };
