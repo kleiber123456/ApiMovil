@@ -1,6 +1,7 @@
 const { enviarCodigoPorCorreo, enviarCorreoRegistroExitoso, enviarCorreoCambioPassword } = require('../utils/emailSender');
 const Usuario = require('../models/usuariosModel');
 const Codigo = require('../models/codigoModel');
+const { pool } = require('../config/db');
 const saltRounds = 10;
 
 exports.getAllUsuarios = async (req, res) => {
@@ -208,12 +209,13 @@ exports.buscarUsuarioPorCorreo = async (req, res) => {
 exports.getUsuariosConVehiculos = async (req, res) => {
     try {
       const [rows] = await pool.query(`
-        SELECT DISTINCT u.idUsuario, u.Nombre, u.Correo
-        FROM Usuarios u
-        JOIN Vehiculos v ON u.idUsuario = v.usuario_idUsuario
+        SELECT DISTINCT u.id, u.Nombre, u.Correo
+        FROM usuario u
+        JOIN Vehiculos v ON u.id = v.usuario_idUsuario
       `);
       res.json(rows);
     } catch (error) {
+      console.error('Error en getUsuariosConVehiculos:', error);
       res.status(500).json({ message: error.message });
     }
   };
