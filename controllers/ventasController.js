@@ -1,7 +1,9 @@
+
 const Venta = require('../models/ventasModel');
 const { enviarComprobanteVenta } = require('../utils/emailSender');
 const Usuario = require('../models/usuariosModel'); // Asumiendo que tienes un modelo de Usuario
 
+// Obtener todas las ventas
 exports.getAllVentas = async (req, res) => {
     try {
         const ventas = await Venta.getAll();
@@ -11,6 +13,7 @@ exports.getAllVentas = async (req, res) => {
     }
 };
 
+// Obtener venta por ID
 exports.getVentaById = async (req, res) => {
     try {
         const venta = await Venta.getById(req.params.id);
@@ -31,6 +34,7 @@ exports.getVentaById = async (req, res) => {
     }
 };
 
+// Crear una nueva venta
 exports.createVenta = async (req, res) => {
     try {
         const { Vehiculos_idVehiculos, Estados_idEstados, Fecha = new Date(), Total = 0 } = req.body;
@@ -49,7 +53,7 @@ exports.createVenta = async (req, res) => {
     }
 };
 
-
+// Actualizar una venta existente
 exports.updateVenta = async (req, res) => {
     try {
         const updated = await Venta.update(req.params.id, req.body);
@@ -62,6 +66,7 @@ exports.updateVenta = async (req, res) => {
     }
 };
 
+// Eliminar una venta
 exports.deleteVenta = async (req, res) => {
     try {
         const deleted = await Venta.delete(req.params.id);
@@ -74,6 +79,7 @@ exports.deleteVenta = async (req, res) => {
     }
 };
 
+// Agregar un repuesto a una venta
 exports.addRepuestoToVenta = async (req, res) => {
     try {
         const { idRepuesto, cantidad, precioUnitario } = req.body;
@@ -92,6 +98,7 @@ exports.addRepuestoToVenta = async (req, res) => {
     }
 };
 
+// Agregar un servicio a una venta
 exports.addServicioToVenta = async (req, res) => {
     try {
         const { idServicio, precioUnitario } = req.body;
@@ -109,6 +116,7 @@ exports.addServicioToVenta = async (req, res) => {
     }
 };
 
+// Completar una venta
 exports.completarVenta = async (req, res) => {
     try {
         const { id } = req.params;
@@ -176,6 +184,63 @@ exports.completarVenta = async (req, res) => {
         });
     } catch (error) {
         console.error('Error al completar venta:', error);
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// **Nuevo**: Función para cancelar una venta
+exports.cancelarVenta = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        // 1. Actualizar el estado de la venta a "Cancelada"
+        const [result] = await pool.query(
+            'UPDATE Ventas SET Estados_idEstados = ? WHERE idVentas = ?',
+            [ESTADO_CANCELADA, id] // Define ESTADO_CANCELADA según tu DB
+        );
+
+        if (!result.affectedRows) {
+            return res.status(404).json({ message: 'Venta no encontrada' });
+        }
+
+        // 2. Obtener información completa de la venta
+        const venta = await Venta.getById(id);
+        const repuestos = await Venta.getRepuestosByVenta(id);
+        const servicios = await Venta.getServiciosByVenta(id);
+
+        // 3. Obtener información del usuario (asumiendo que hay relación Vehículo -> Usuario)
+        const [usuario] = await pool.query(`
+            SELECT u.* FROM Usuarios u
+            JOIN Vehiculos v ON u.id = v.usuario_idUsuario
+            WHERE v.idVehiculos = ?
+        `, [venta.Vehiculos_idVehiculos]);
+
+        if (!usuario || !usuario.length) {
+            return res.status(404).json({ message: 'Usuario no encontrado para esta venta' });
+        }
+
+        const userEmail = usuario[0].Correo;
+        const userName = usuario[0].Nombre;
+
+        // 4. Preparar datos para el correo (si deseas enviar un correo de cancelación)
+        const ventaInfo = {
+            idVenta: venta.idVentas,
+            fecha: venta.Fecha,
+            total: venta.Total,
+            vehiculoPlaca: venta.VehiculoPlaca,
+            vehiculoMarca: venta.MarcaNombre,
+            vehiculoReferencia: venta.ReferenciaNombre
+        };
+
+        // 5. Enviar correo de cancelación si lo deseas
+        await enviarComprobanteVenta(userEmail, userName, ventaInfo, []); // Podrías cambiar esto si deseas un correo específico
+
+        res.json({ 
+            message: 'Venta cancelada exitosamente y correo enviado',
+            ventaId: venta.idVentas
+        });
+    } catch (error) {
+        console.error('Error al cancelar venta:', error);
         res.status(500).json({ message: error.message });
     }
 };

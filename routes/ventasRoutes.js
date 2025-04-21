@@ -19,6 +19,8 @@ router.delete('/:id', ventasController.deleteVenta);
 // Rutas para ítems de venta
 router.post('/:idVenta/repuestos', ventasController.addRepuestoToVenta);
 router.post('/:idVenta/servicios', ventasController.addServicioToVenta);
+// Ruta para cancelar una venta
+router.post('/:id/cancelar', ventasController.cancelarVenta);
 router.post('/:id/completar', ventasController.completarVenta);
 
 module.exports = router;
