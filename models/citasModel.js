@@ -1,4 +1,4 @@
-const  { pool } = require('../config/db');
+const { pool } = require('../config/db');
 
 class Cita {
     static async getAll() {
@@ -33,7 +33,7 @@ class Cita {
     static async create(cita) {
         const { Fecha, Hora, idVehiculos, idMecanicos, Ventas_idVentas, Estado_cita_idEstado_cita } = cita;
         const [result] = await pool.query(
-            'INSERT INTO Citas (Fecha, Hora, idVehiculos, idMecanicos, Ventas_idVentas, Estado_cita_idEstado_cita) VALUES (?, ?, ?, ?, ?, ?, ?)',
+            'INSERT INTO Citas (Fecha, Hora, idVehiculos, idMecanicos, Ventas_idVentas, Estado_cita_idEstado_cita) VALUES (?, ?, ?, ?, ?, ?)',
             [Fecha, Hora, idVehiculos, idMecanicos, Ventas_idVentas, Estado_cita_idEstado_cita]
         );
         return result.insertId;
@@ -42,7 +42,7 @@ class Cita {
     static async update(id, cita) {
         const { Fecha, Hora, idVehiculos, idMecanicos, Ventas_idVentas, Estado_cita_idEstado_cita } = cita;
         const [result] = await pool.query(
-            'UPDATE Citas SET Fecha = ?, Estado = ?, Hora = ?, idVehiculos = ?, idMecanicos = ?, Ventas_idVentas = ?, Estado_cita_idEstado_cita = ? WHERE idCitas = ?',
+            'UPDATE Citas SET Fecha = ?, Hora = ?, idVehiculos = ?, idMecanicos = ?, Ventas_idVentas = ?, Estado_cita_idEstado_cita = ? WHERE idCitas = ?',
             [Fecha, Hora, idVehiculos, idMecanicos, Ventas_idVentas, Estado_cita_idEstado_cita, id]
         );
         return result.affectedRows > 0;
@@ -99,8 +99,6 @@ class Cita {
             throw error;
         }
     }
-
-    
 }
 
 module.exports = Cita;
