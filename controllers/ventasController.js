@@ -2,6 +2,7 @@
 const Venta = require('../models/ventasModel');
 const { enviarComprobanteVenta } = require('../utils/emailSender');
 const Usuario = require('../models/usuariosModel'); // Asumiendo que tienes un modelo de Usuario
+const { pool } = require('../config/db');
 
 // Obtener todas las ventas
 exports.getAllVentas = async (req, res) => {
