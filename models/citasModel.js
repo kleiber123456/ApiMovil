@@ -67,6 +67,40 @@ class Cita {
         const [rows] = await pool.query('SELECT * FROM Citas WHERE Estado_cita_idEstado_cita = ?', [estadoId]);
         return rows;
     }
+
+    static async checkDisponibilidad(mecanicoId, fechaHora) {
+        try {
+            const fechaSolicitada = new Date(fechaHora);
+            const horaSolicitada = fechaHora.split('T')[1].substring(0, 8); // Extraer HH:MM:SS
+            
+            // Consulta SQL que verifica solapamiento de horarios
+            const [rows] = await pool.query(`
+                SELECT COUNT(*) as count 
+                FROM Citas 
+                WHERE idMecanicos = ? 
+                AND Fecha = ? 
+                AND (
+                    (? BETWEEN Hora AND ADDTIME(Hora, '01:00:00') OR
+                    (ADDTIME(?, '01:00:00') BETWEEN Hora AND ADDTIME(Hora, '01:00:00')) OR
+                    (? <= Hora AND ADDTIME(?, '01:00:00') >= ADDTIME(Hora, '01:00:00'))
+                )
+            `, [
+                mecanicoId,
+                fechaHora.split('T')[0], // Fecha YYYY-MM-DD
+                horaSolicitada,
+                horaSolicitada,
+                horaSolicitada,
+                horaSolicitada
+            ]);
+            
+            return rows[0].count === 0;
+        } catch (error) {
+            console.error('Error en checkDisponibilidad (SQL):', error);
+            throw error;
+        }
+    }
+
+    
 }
 
 module.exports = Cita;

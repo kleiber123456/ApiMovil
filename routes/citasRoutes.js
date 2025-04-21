@@ -12,5 +12,6 @@ router.delete('/:id', citasController.deleteCita);
 router.get('/mecanico/:idMecanico', citasController.getCitasByMecanico);
 router.get('/vehiculo/:idVehiculo', citasController.getCitasByVehiculo);
 router.get('/estado/:estadoId', citasController.getCitasByEstado);
+router.get('/disponibilidad', citasController.verificarDisponibilidad);
 
 module.exports = router;

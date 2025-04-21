@@ -80,3 +80,41 @@ exports.getCitasByEstado = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+exports.verificarDisponibilidad = async (req, res) => {
+    try {
+        const { mecanico_id, fecha } = req.query;
+        
+        if (!mecanico_id || !fecha) {
+            return res.status(400).json({ 
+                success: false,
+                message: 'Se requieren mecanico_id y fecha como parámetros de consulta' 
+            });
+        }
+        
+        // Validar que la fecha sea válida
+        if (isNaN(new Date(fecha).getTime())) {
+            return res.status(400).json({ 
+                success: false,
+                message: 'Formato de fecha inválido. Use formato ISO 8601 (ej: 2025-04-24T14:30:00)' 
+            });
+        }
+        
+        const disponible = await Cita.checkDisponibilidad(mecanico_id, fecha);
+        
+        res.json({ 
+            success: true,
+            disponible,
+            mecanico_id,
+            fecha_solicitada: fecha,
+            message: disponible ? 'El mecánico está disponible en este horario' : 'El mecánico no está disponible en este horario'
+        });
+        
+    } catch (error) {
+        console.error('Error en verificarDisponibilidad:', error);
+        res.status(500).json({ 
+            success: false,
+            message: 'Error al verificar disponibilidad',
+            error: error.message 
+        });
+    }
+};
