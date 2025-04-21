@@ -27,19 +27,21 @@ class Venta {
     }
 
     static async create(venta) {
-        const { Fecha, Vehiculos_idVehiculos, Estados_idEstados, Total } = venta;
+        const { Fecha = new Date(), Vehiculos_idVehiculos, Estados_idEstados, Total = 0 } = venta;
+        const totalDecimal = parseFloat(Total);
         const [result] = await pool.query(
             'INSERT INTO Ventas (Fecha, Vehiculos_idVehiculos, Estados_idEstados, Total) VALUES (?, ?, ?, ?)',
-            [Fecha, Vehiculos_idVehiculos, Estados_idEstados, Total]
+            [Fecha, Vehiculos_idVehiculos, Estados_idEstados, isNaN(totalDecimal) ? 0 : totalDecimal]
         );
         return result.insertId;
     }
 
     static async update(id, venta) {
-        const { Fecha, Vehiculos_idVehiculos, Estados_idEstados, Total } = venta;
+        const { Fecha, Vehiculos_idVehiculos, Estados_idEstados, Total = 0 } = venta;
+        const totalDecimal = parseFloat(Total);
         const [result] = await pool.query(
             'UPDATE Ventas SET Fecha = ?, Vehiculos_idVehiculos = ?, Estados_idEstados = ?, Total = ? WHERE idVentas = ?',
-            [Fecha, Vehiculos_idVehiculos, Estados_idEstados, Total, id]
+            [Fecha, Vehiculos_idVehiculos, Estados_idEstados, isNaN(totalDecimal) ? 0 : totalDecimal, id]
         );
         return result.affectedRows > 0;
     }
@@ -79,7 +81,7 @@ class Venta {
 
     static async addServicioToVenta(idVenta, idServicio, subtotal) {
         const [result] = await pool.query(
-            'INSERT INTO Venta_Por_Servicio (Ventas_idVentas, Servicios_idServicios, Subotal) VALUES (?, ?, ?)',
+            'INSERT INTO Venta_Por_Servicio (Ventas_idVentas, Servicios_idServicios, Subtotal) VALUES (?, ?, ?)',
             [idVenta, idServicio, subtotal]
         );
         return result.insertId;
@@ -87,3 +89,4 @@ class Venta {
 }
 
 module.exports = Venta;
+

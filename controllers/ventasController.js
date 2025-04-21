@@ -33,17 +33,22 @@ exports.getVentaById = async (req, res) => {
 
 exports.createVenta = async (req, res) => {
     try {
-        const { Vehiculos_idVehiculos, Estados_idEstados } = req.body;
+        const { Vehiculos_idVehiculos, Estados_idEstados, Fecha = new Date(), Total = 0 } = req.body;
+        const totalDecimal = parseFloat(Total);
+
         const newVentaId = await Venta.create({
             Vehiculos_idVehiculos,
             Estados_idEstados,
-            Total: 0
+            Fecha,
+            Total: isNaN(totalDecimal) ? 0 : totalDecimal
         });
+
         res.status(201).json({ id: newVentaId, message: 'Venta creada correctamente' });
     } catch (error) {
         res.status(400).json({ message: error.message });
     }
 };
+
 
 exports.updateVenta = async (req, res) => {
     try {
