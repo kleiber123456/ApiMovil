@@ -249,4 +249,14 @@ exports.cancelarVenta = async (req, res) => {
         console.error('Error al cancelar venta:', error);
         res.status(500).json({ message: error.message });
     }
+
+    exports.recalcularTotalVenta = async (req, res) => {
+        try {
+            const { id } = req.params;
+            const nuevoTotal = await Venta.recalcularTotal(id);
+            res.json({ message: 'Total recalculado', total: nuevoTotal });
+        } catch (error) {
+            res.status(500).json({ message: 'Error al recalcular total', error: error.message });
+        }
+    };
 };

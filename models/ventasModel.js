@@ -38,11 +38,7 @@ class Venta {
 
     static async update(id, venta) {
         let { Fecha, Vehiculos_idVehiculos, Estados_idEstados, Total = 0 } = venta;
-    
-        if (!Fecha) {
-            Fecha = new Date(); // usar fecha actual si es null
-        }
-    
+        if (!Fecha) Fecha = new Date();
         const totalDecimal = parseFloat(Total);
         const [result] = await pool.query(
             'UPDATE Ventas SET Fecha = ?, Vehiculos_idVehiculos = ?, Estados_idEstados = ?, Total = ? WHERE idVentas = ?',
@@ -50,7 +46,6 @@ class Venta {
         );
         return result.affectedRows > 0;
     }
-    
 
     static async delete(id) {
         const [result] = await pool.query('DELETE FROM Ventas WHERE idVentas = ?', [id]);
@@ -92,7 +87,28 @@ class Venta {
         );
         return result.insertId;
     }
+
+    static async recalcularTotal(idVenta) {
+        const [repuestos] = await pool.query(`
+            SELECT SUM(Subtotal) as totalRepuestos 
+            FROM Venta_Por_Repuesto 
+            WHERE idVentas = ?
+        `, [idVenta]);
+
+        const [servicios] = await pool.query(`
+            SELECT SUM(Subtotal) as totalServicios 
+            FROM Venta_Por_Servicio 
+            WHERE Ventas_idVentas = ?
+        `, [idVenta]);
+
+        const total = (repuestos[0].totalRepuestos || 0) + (servicios[0].totalServicios || 0);
+
+        const [result] = await pool.query(`
+            UPDATE Ventas SET Total = ?, Estados_idEstados = ? WHERE idVentas = ?
+        `, [total, total > 0 ? 2 : 1, idVenta]);
+
+        return total;
+    }
 }
 
 module.exports = Venta;
-
