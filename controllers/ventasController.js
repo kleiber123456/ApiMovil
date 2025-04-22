@@ -57,6 +57,10 @@ exports.createVenta = async (req, res) => {
 // Actualizar una venta existente
 exports.updateVenta = async (req, res) => {
     try {
+        if (!req.body.Fecha) {
+            req.body.Fecha = new Date(); // prevenir que sea null
+        }
+
         const updated = await Venta.update(req.params.id, req.body);
         if (!updated) {
             return res.status(404).json({ message: 'Venta no encontrada' });
@@ -66,6 +70,7 @@ exports.updateVenta = async (req, res) => {
         res.status(400).json({ message: error.message });
     }
 };
+
 
 // Eliminar una venta
 exports.deleteVenta = async (req, res) => {

@@ -37,7 +37,12 @@ class Venta {
     }
 
     static async update(id, venta) {
-        const { Fecha, Vehiculos_idVehiculos, Estados_idEstados, Total = 0 } = venta;
+        let { Fecha, Vehiculos_idVehiculos, Estados_idEstados, Total = 0 } = venta;
+    
+        if (!Fecha) {
+            Fecha = new Date(); // usar fecha actual si es null
+        }
+    
         const totalDecimal = parseFloat(Total);
         const [result] = await pool.query(
             'UPDATE Ventas SET Fecha = ?, Vehiculos_idVehiculos = ?, Estados_idEstados = ?, Total = ? WHERE idVentas = ?',
@@ -45,6 +50,7 @@ class Venta {
         );
         return result.affectedRows > 0;
     }
+    
 
     static async delete(id) {
         const [result] = await pool.query('DELETE FROM Ventas WHERE idVentas = ?', [id]);
