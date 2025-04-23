@@ -15,16 +15,27 @@ class Venta {
 
     static async getById(id) {
         const [rows] = await pool.query(`
-            SELECT v.*, 
-                   ve.Placa as VehiculoPlaca, 
-                   e.Nombre as EstadoNombre 
+            SELECT 
+                v.idVentas,
+                v.Fecha,
+                v.Total,
+                e.Nombre AS estado,
+                ve.Placa AS placa_vehiculo,
+                CONCAT(u.Nombre, ' ', u.Apellido) AS nombre_cliente,
+                v.Vehiculos_idVehiculos,
+                v.Estados_idEstados,
+                c.Descripcion
             FROM Ventas v
-            JOIN Vehiculos ve ON v.Vehiculos_idVehiculos = ve.idVehiculos
-            JOIN Estados e ON v.Estados_idEstados = e.idEstados
+            LEFT JOIN Estados e ON v.Estados_idEstados = e.idEstados
+            LEFT JOIN Vehiculos ve ON v.Vehiculos_idVehiculos = ve.idVehiculos
+            LEFT JOIN Usuario u ON ve.usuario_idUsuario = u.id
+            LEFT JOIN Citas c ON c.Ventas_idVentas = v.idVentas
             WHERE v.idVentas = ?
         `, [id]);
+    
         return rows[0];
     }
+    
 
     static async create(venta) {
         const { Fecha = new Date(), Vehiculos_idVehiculos, Estados_idEstados, Total = 0 } = venta;
