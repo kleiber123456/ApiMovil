@@ -52,16 +52,36 @@ class Venta {
     }
 
     // Actualizar una venta existente
-    static async update(id, venta) {
-        let { Fecha, Vehiculos_idVehiculos, Estados_idEstados, Total = 0 } = venta;
-        if (!Fecha) Fecha = new Date();
-        const totalDecimal = parseFloat(Total);
-        const [result] = await pool.query(
-            'UPDATE Ventas SET Fecha = ?, Vehiculos_idVehiculos = ?, Estados_idEstados = ?, Total = ? WHERE idVentas = ?',
-            [Fecha, Vehiculos_idVehiculos, Estados_idEstados, isNaN(totalDecimal) ? 0 : totalDecimal, id]
-        );
-        return result.affectedRows > 0;
+    // Actualizar una venta existente
+static async update(id, venta) {
+    const campos = [];
+    const valores = [];
+  
+    if (venta.Fecha) {
+      campos.push('Fecha = ?');
+      valores.push(venta.Fecha);
     }
+    if (venta.Vehiculos_idVehiculos) {
+      campos.push('Vehiculos_idVehiculos = ?');
+      valores.push(venta.Vehiculos_idVehiculos);
+    }
+    if (venta.Estados_idEstados) {
+      campos.push('Estados_idEstados = ?');
+      valores.push(venta.Estados_idEstados);
+    }
+    if (venta.Total !== undefined) {
+      campos.push('Total = ?');
+      valores.push(parseFloat(venta.Total) || 0);
+    }
+  
+    if (campos.length === 0) return false;
+  
+    valores.push(id);
+    const query = `UPDATE Ventas SET ${campos.join(', ')} WHERE idVentas = ?`;
+    const [result] = await pool.query(query, valores);
+    return result.affectedRows > 0;
+  }
+  
 
     // Eliminar una venta
     static async delete(id) {
