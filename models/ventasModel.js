@@ -28,13 +28,14 @@ class Venta {
             FROM Ventas v
             LEFT JOIN Estados e ON v.Estados_idEstados = e.idEstados
             LEFT JOIN Vehiculos ve ON v.Vehiculos_idVehiculos = ve.idVehiculos
-            LEFT JOIN Usuario u ON ve.usuario_idUsuario = u.id
+            LEFT JOIN usuario u ON ve.usuario_idUsuario = u.id
             LEFT JOIN Citas c ON c.Ventas_idVentas = v.idVentas
             WHERE v.idVentas = ?
         `, [id]);
     
         return rows[0];
     }
+    
     
 
     static async create(venta) {
