@@ -18,11 +18,19 @@ exports.getAllVentas = async (req, res) => {
     try {
       const venta = await Venta.getById(req.params.id);
       if (!venta) return res.status(404).json({ message: 'Venta no encontrada' });
+  
+      const repuestos = await Venta.getRepuestosByVenta(req.params.id);
+      const servicios = await Venta.getServiciosByVenta(req.params.id);
+  
+      venta.repuestos = repuestos;
+      venta.servicios = servicios;
+  
       res.json(venta);
     } catch (err) {
       res.status(500).json({ message: err.message });
     }
   };
+  
 
 // Crear una nueva venta
 exports.createVenta = async (req, res) => {
