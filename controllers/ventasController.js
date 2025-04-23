@@ -4,36 +4,25 @@ const { enviarComprobanteVenta } = require('../utils/emailSender');
 const Usuario = require('../models/usuariosModel'); // Asumiendo que tienes un modelo de Usuario
 const { pool } = require('../config/db');
 
-// Obtener todas las ventas
 exports.getAllVentas = async (req, res) => {
     try {
-        const ventas = await Venta.getAll();
-        res.json(ventas);
-    } catch (error) {
-        res.status(500).json({ message: error.message });
+      const ventas = await Venta.getAll();
+      res.json(ventas);
+    } catch (err) {
+      res.status(500).json({ message: err.message });
     }
-};
-
-// Obtener venta por ID
-exports.getVentaById = async (req, res) => {
+  };
+  
+  // GET /api/ventas/:id
+  exports.getVentaById = async (req, res) => {
     try {
-        const venta = await Venta.getById(req.params.id);
-        if (!venta) {
-            return res.status(404).json({ message: 'Venta no encontrada' });
-        }
-        
-        const repuestos = await Venta.getRepuestosByVenta(req.params.id);
-        const servicios = await Venta.getServiciosByVenta(req.params.id);
-        
-        res.json({
-            ...venta,
-            repuestos,
-            servicios
-        });
-    } catch (error) {
-        res.status(500).json({ message: error.message });
+      const venta = await Venta.getById(req.params.id);
+      if (!venta) return res.status(404).json({ message: 'Venta no encontrada' });
+      res.json(venta);
+    } catch (err) {
+      res.status(500).json({ message: err.message });
     }
-};
+  };
 
 // Crear una nueva venta
 exports.createVenta = async (req, res) => {

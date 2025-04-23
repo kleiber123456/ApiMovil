@@ -1,6 +1,7 @@
 const { pool } = require('../config/db');
 
 class Venta {
+    // Listar todas las ventas (puedes ajustarlo si necesitas más campos)
     static async getAll() {
         const [rows] = await pool.query(`
             SELECT v.*, 
@@ -13,6 +14,7 @@ class Venta {
         return rows;
     }
 
+    // Traer el detalle completo de una venta
     static async getById(id) {
         const [rows] = await pool.query(`
             SELECT 
@@ -21,10 +23,12 @@ class Venta {
                 v.Total,
                 e.Nombre AS estado,
                 ve.Placa AS placa_vehiculo,
+                ve.color AS color,
+                ve.tipo_vehiculo AS tipo_vehiculo,
                 CONCAT(u.Nombre, ' ', u.Apellido) AS nombre_cliente,
                 v.Vehiculos_idVehiculos,
                 v.Estados_idEstados,
-                c.Descripcion
+                c.Descripcion AS descripcion
             FROM Ventas v
             LEFT JOIN Estados e ON v.Estados_idEstados = e.idEstados
             LEFT JOIN Vehiculos ve ON v.Vehiculos_idVehiculos = ve.idVehiculos
@@ -32,12 +36,11 @@ class Venta {
             LEFT JOIN Citas c ON c.Ventas_idVentas = v.idVentas
             WHERE v.idVentas = ?
         `, [id]);
-    
+
         return rows[0];
     }
-    
-    
 
+    // Crear una nueva venta
     static async create(venta) {
         const { Fecha = new Date(), Vehiculos_idVehiculos, Estados_idEstados, Total = 0 } = venta;
         const totalDecimal = parseFloat(Total);
@@ -48,6 +51,7 @@ class Venta {
         return result.insertId;
     }
 
+    // Actualizar una venta existente
     static async update(id, venta) {
         let { Fecha, Vehiculos_idVehiculos, Estados_idEstados, Total = 0 } = venta;
         if (!Fecha) Fecha = new Date();
@@ -59,14 +63,20 @@ class Venta {
         return result.affectedRows > 0;
     }
 
+    // Eliminar una venta
     static async delete(id) {
         const [result] = await pool.query('DELETE FROM Ventas WHERE idVentas = ?', [id]);
         return result.affectedRows > 0;
     }
 
+    // Obtener repuestos por venta (con nombres como espera Flutter)
     static async getRepuestosByVenta(idVenta) {
         const [rows] = await pool.query(`
-            SELECT vpr.*, r.Nombre as RepuestoNombre 
+            SELECT 
+                r.Nombre AS nombre_repuesto,
+                vpr.Cantidad,
+                vpr.Precio_Unitario,
+                vpr.Subtotal
             FROM Venta_Por_Repuesto vpr
             JOIN Repuestos r ON vpr.idRepuestos = r.idRepuestos
             WHERE vpr.idVentas = ?
@@ -74,9 +84,12 @@ class Venta {
         return rows;
     }
 
+    // Obtener servicios por venta (con nombres como espera Flutter)
     static async getServiciosByVenta(idVenta) {
         const [rows] = await pool.query(`
-            SELECT vps.*, s.Nombre as ServicioNombre 
+            SELECT 
+                s.Nombre AS nombre_servicio,
+                vps.Subtotal
             FROM Venta_Por_Servicio vps
             JOIN Servicios s ON vps.Servicios_idServicios = s.idServicios
             WHERE vps.Ventas_idVentas = ?
@@ -84,6 +97,7 @@ class Venta {
         return rows;
     }
 
+    // Agregar repuesto a una venta
     static async addRepuestoToVenta(idVenta, idRepuesto, cantidad, subtotal) {
         const [result] = await pool.query(
             'INSERT INTO Venta_Por_Repuesto (idRepuestos, idVentas, cantidad, Subtotal) VALUES (?, ?, ?, ?)',
@@ -92,6 +106,7 @@ class Venta {
         return result.insertId;
     }
 
+    // Agregar servicio a una venta
     static async addServicioToVenta(idVenta, idServicio, subtotal) {
         const [result] = await pool.query(
             'INSERT INTO Venta_Por_Servicio (Ventas_idVentas, Servicios_idServicios, Subtotal) VALUES (?, ?, ?)',
@@ -100,6 +115,7 @@ class Venta {
         return result.insertId;
     }
 
+    // Recalcular el total de una venta sumando repuestos y servicios
     static async recalcularTotal(idVenta) {
         const [repuestos] = await pool.query(`
             SELECT SUM(Subtotal) as totalRepuestos 
@@ -124,3 +140,4 @@ class Venta {
 }
 
 module.exports = Venta;
+
