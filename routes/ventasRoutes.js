@@ -13,7 +13,7 @@ router.get('/:id/repuestos', ventaPorRepuestoController.getByVentaId);
 router.get('/:id/servicios', ventaPorServicioController.getByVentaId);
 router.get('/:id', ventasController.getVentaById);
 router.post('/', ventasController.createVenta);
-router.put('/:id/recalcular-total', ventasController.recalcularTotalVenta);
+
 router.put('/:id', ventasController.updateVenta);
 router.delete('/:id', ventasController.deleteVenta);
 
